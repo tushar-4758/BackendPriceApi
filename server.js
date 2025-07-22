@@ -33,6 +33,10 @@ app.get("/callback", async (req, res) => {
         res.send("❌ Error fetching token.");
     }
 });
+app.get('/', (req, res) => {
+  res.send('API is running!');
+});
+
 
 // Start the server
 app.listen(PORT, () => {
