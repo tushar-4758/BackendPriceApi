@@ -1,3 +1,8 @@
+const tokenData = JSON.parse(fs.readFileSync("tokenStore.json", "utf8"));
+const accessToken = tokenData.data?.jwtToken; // Adjust this if structure differs
+
+
+
 app.get('/price', async (req, res) => {
   const symbol = req.query.symbol?.toUpperCase();
   if (!symbol) return res.status(400).json({ error: "Missing symbol parameter" });
