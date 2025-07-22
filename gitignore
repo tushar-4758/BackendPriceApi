@@ -1,0 +1,39 @@
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build files
+dist/
+build/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# IDE specific
+.vscode/
+.idea/
+
+# Render build cache (if applicable)
+.cache/
+
+# Optional: Ignore coverage reports
+coverage/
+
+# Optional: Ignore generated files by pm2
+pids/
+*.pid
+*.seed
+
+# Optional: ignore local .env.* variants
+.env.*
+!.env.example
