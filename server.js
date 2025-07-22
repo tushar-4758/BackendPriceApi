@@ -4,15 +4,15 @@ const fs = require("fs");
 require("dotenv").config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// Redirect to Angel One login
+// Login route
 app.get("/login", (req, res) => {
     const redirectUrl = `https://smartapi.angelbroking.com/publisher-login?api_key=${process.env.API_KEY}&redirect_uri=${process.env.REDIRECT_URL}`;
     res.redirect(redirectUrl);
 });
 
-// Callback URL where Angel One will redirect with code
+// Callback route
 app.get("/callback", async (req, res) => {
     const code = req.query.code;
     if (!code) return res.send("Code not found in query!");
@@ -33,12 +33,26 @@ app.get("/callback", async (req, res) => {
         res.send("❌ Error fetching token.");
     }
 });
+
+// Root route
 app.get('/', (req, res) => {
-  res.send('API is running!bro');
+    res.send('API is running! bro');
 });
 
+// ✅ /price route
+app.get('/price', (req, res) => {
+    const symbol = req.query.symbol || 'RELIANCE';
 
-// Start the server
+    // Filhaal dummy data — baad me live connect karenge
+    res.json({
+        symbol,
+        livePrice: 3025.45,
+        high: 3050.00,
+        low: 2990.50
+    });
+});
+
+// Start server
 app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
 });
