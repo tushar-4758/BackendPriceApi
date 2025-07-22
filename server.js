@@ -1,59 +1,39 @@
-const express = require("express");
-const axios = require("axios");
-const fs = require("fs");
-require("dotenv").config();
+app.get('/price', async (req, res) => {
+  const symbol = req.query.symbol?.toUpperCase();
+  if (!symbol) return res.status(400).json({ error: "Missing symbol parameter" });
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+  let tokenData;
+  try {
+    tokenData = JSON.parse(fs.readFileSync("tokenStore.json", "utf8"));
+  } catch {
+    return res.status(500).json({ error: "Missing or invalid tokenStore.json" });
+  }
 
-// 1. Redirect to Angel One login
-app.get("/login", (req, res) => {
-  const redirectUrl = `https://smartapi.angelbroking.com/publisher-login?api_key=${process.env.API_KEY}&redirect_uri=${process.env.REDIRECT_URL}`;
-  res.redirect(redirectUrl);
-});
+  const endpoint = "https://apiconnect.angelbroking.com/rest/secure/angelbroking/market/v1/quote/";
+  const headers = {
+    Authorization: `Bearer ${tokenData.access_token}`,
+    "Content-Type": "application/json"
+  };
 
-// 2. Callback URL to fetch token
-app.get("/callback", async (req, res) => {
-  const code = req.query.code;
-  if (!code) return res.send("Code not found in query!");
+  // You'll need to look up the NSE symbolToken for your symbol
+  const symbolToken = "SOME_TOKEN"; // TODO: implement /instruments lookup
+
+  const body = {
+    mode: "LTP",
+    exchangeTokens: { NSE: [ symbolToken ] }
+  };
 
   try {
-    const response = await axios.post(
-      "https://apiconnect.angelbroking.com/rest/auth/angelbroking/user/v1/loginByCode",
-      {
-        code: code,
-        client_id: process.env.CLIENT_ID,
-        client_secret: process.env.CLIENT_SECRET,
-        redirect_uri: process.env.REDIRECT_URL
-      }
-    );
-
-    const tokenData = response.data;
-    fs.writeFileSync("tokenStore.json", JSON.stringify(tokenData, null, 2));
-    res.send("✅ Token fetched and saved successfully.");
+    const resp = await axios.post(endpoint, body, { headers });
+    const fetched = resp.data.data.fetched[0];
+    res.json({
+      symbol,
+      ltp: fetched.ltp,
+      high: fetched.high,
+      low: fetched.low
+    });
   } catch (err) {
     console.error(err.response?.data || err.message);
-    res.send("❌ Error fetching token.");
+    res.status(500).json({ error: "Failed to fetch data" });
   }
-});
-
-// 3. Default root route
-app.get('/', (req, res) => {
-  res.send('API is running!');
-});
-
-// 4. Price route
-app.get('/price', (req, res) => {
-  const symbol = req.query.symbol || 'RELIANCE';
-  res.json({
-    symbol,
-    livePrice: 3025.45,
-    high: 3050.00,
-    low: 2990.50
-  });
-});
-
-// 5. Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
 });
